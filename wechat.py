@@ -55,10 +55,4 @@ class wechat_sender(object):
 		re = requests.post("%smessage/send?access_token=%s" %(config["wechat_config"]["base_url"], access_token ), data=json.dumps(payload))
 		return re.status_code
 
-# if __name__ == "__main__":
-# 	sender = wechat_sender(config['wechat_config']['limao_secret'],
-# 							config['wechat_config']['limao_agent_id'] ,
-# 							"Hello, It is just a test!")
-# 	print(sender.send_msg(sender.get_access_token()))
-
 
