@@ -1,19 +1,22 @@
 import datetime
-from config_setting import config
+import configparser
 from elasticsearch import Elasticsearch
 
+STATUS_CODE_500 = "500"
+STATUS_CODE_499 = "499"
+
 class elasticsearch_engine(object):
-	def __init__(self, es_index_name):
-		self.es_index_name = es_index_name
+	def __init__(self, config):
+		self.config = config
 		self.serverError_filter_json = { 
 					"range": {
 						 "status": {
-							  "gte": config['status_code']['status_code_500']
+							  "gte": STATUS_CODE_500
 							  }
 					  }}
 		self.timeout_filter_json = {
 					"term":{
-						"status":config['status_code']['status_code_499']
+						"status": STATUS_CODE_499
 						}
 					}
 
@@ -30,11 +33,11 @@ class elasticsearch_engine(object):
 	# 根据@timestamp和status字段过滤搜索ES日志
 	def query(self, filter_string):
 		es = Elasticsearch([{
-			  'host': config['es_setting']['host'], 
-		      'port': config['es_setting']['port'],
-		      'http_auth':(config['es_setting']['user'], config['es_setting']['pwd'])
+			  'host': self.config['es_setting']['host'], 
+		      'port': self.config['es_setting']['port'],
+		      'http_auth':( self.config['es_setting']['user'], self.config['es_setting']['pwd'])
 		    }])
-		index_name = ('{0}{1}'.format(self.es_index_name, self.cur_date() ))
+		index_name = ('{0}{1}'.format(self.config['es_setting']['index_name'], self.cur_date() ))
 		data = {
 				  "query": { 
 				    "bool": { 
@@ -45,8 +48,8 @@ class elasticsearch_engine(object):
 				    }
 				  }
 				}
-		print(self.cur_time(),data,index_name)
-		search = es.search(index=index_name,body=data)
+		print(self.cur_time(), data, index_name)
+		search = es.search(index = index_name, body = data)
 		return search['hits']['total']
 	
 	# 在ES中过滤请求返回码等于499，并返回记录总数	

@@ -1,7 +1,7 @@
 import sys
 import json
 import requests
-from config_setting import config
+import configparser
 
 '''
 注册企业微信号后，可以通过API接口推送消息至关注本企业应用的微信成员
@@ -16,25 +16,17 @@ content 是   消息内容
 safe    否   表示是否是保密消息，0表示否，1表示是，默认0
 """
 '''
-
-'''
-企业微信初始化的时候，需要传入以下参数
-"""
-secret: 企业微信应用的secret，可在登陆管理后台-> 企业应用 -> Secret中找到
-agent_id: 企业应用的id, 可在登陆管理后台-> 企业应用 -> AgentId中找到
-msg_content: 需要发送微信短信的内容
-"""
-'''
 class wechat_sender(object):
-	def __init__(self, secret, agent_id, msg_content):
+	def __init__(self, config, msg_content):
 		self.msg_content = msg_content
-		self.secret = secret
-		self.agent_id = agent_id
+		self.config = config
 
 	# 获取微信企业应用的access_token
 	def get_access_token(self):
 		re = requests.get("%sgettoken?corpid=%s&corpsecret=%s" 
-							%(config["wechat_config"]["base_url"], config["wechat_config"]["corpid"],self.secret ))
+							%( self.config["wechat_config"]["base_url"], 
+								self.config["wechat_config"]["corpid"],
+								self.config['wechat_config']['secret'] ))
 		return re.json()["access_token"]
 
 	# 向关注微信企业应用的微信成员发送信息
@@ -43,16 +35,15 @@ class wechat_sender(object):
 		payload = {
 		   "toparty" : "2",
 		   "msgtype" : "text",
-		   "agentid" : self.agent_id,
+		   "agentid" : self.config['wechat_config']['agent_id'],
 		   "text" : {
 		       "content" : self.msg_content
 		   },
 		   "safe":0
 		}
 
-		print ("%smessage/send?access_token=%s" %(config["wechat_config"]["base_url"], access_token ))
+		print ("%smessage/send?access_token=%s" %(self.config["wechat_config"]["base_url"], access_token ))
 		print(payload)
-		re = requests.post("%smessage/send?access_token=%s" %(config["wechat_config"]["base_url"], access_token ), data=json.dumps(payload))
+		re = requests.post("%smessage/send?access_token=%s" %(self.config["wechat_config"]["base_url"], access_token ), 
+							data=json.dumps(payload))
 		return re.status_code
-
-
